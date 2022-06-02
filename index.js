@@ -1,13 +1,12 @@
 const express = require("express");
 const app = express();
-const bodyParser = require('body-parser');  
-const urlencodedParser = bodyParser.urlencoded({ extended: false })  
 const {getAudits} = require('./lighhouse')
 const PORT = 3000;
 
-app.post("/", urlencodedParser, async (req, res) => {
-  const url = req.body.url
-  const audits = await getAudits(url)
+app.get("/", async (req, res) => {
+  const url = req.query.url
+  const config = req.query.config
+  const audits = await getAudits(url, config)
   res.send(audits)
 });
 
