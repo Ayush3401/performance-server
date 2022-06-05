@@ -161,21 +161,23 @@
  const desktopConfig = {
     extends: 'lighthouse:default',
     settings: {
+      onlyCategories: ['performance'],
       maxWaitForFcp: 15 * 1000,
       maxWaitForLoad: 35 * 1000,
       formFactor: 'desktop',
       throttling: throttling.desktopDense4G,
       screenEmulation: screenEmulationMetrics.desktop,
       emulatedUserAgent: userAgents.desktop,
-      onlyAudits: ['third-party-summary']
+      skipAudits: ['uses-http2']
     },
   };
   const mobileConfig = {
     extends: 'lighthouse:default',
     settings: {
+      onlyCategories: ['performance'],
       maxWaitForFcp: 15 * 1000,
       maxWaitForLoad: 35 * 1000,
-      onlyAudits: ['third-party-summary']
+      skipAudits: ['uses-http2']
     },
     audits: [
       'metrics/first-contentful-paint-3g',
