@@ -2,7 +2,7 @@ const express = require("express");
 const cors =require('cors');
 const app = express();
 app.use(cors());
-const {getAudits} = require('./lighhouse')
+const {getAudits} = require('./lighthouse')
 const PORT = 8080;
 
 app.get("/", async (req, res) => {
