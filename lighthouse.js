@@ -5,10 +5,13 @@ const constants = require('./constants');
 const getAudits = async (url) => {
   const chrome = await chromeLauncher.launch({chromeFlags: ['--headless', '--disable-gpu']});
   const options = {onlyAudits: [
+    'resource-summary',
+    'mainthread-work-breakdown',
     'bootup-time',
-    'network-requests',
     'third-party-summary',
-    'script-treemap-data'  
+    'network-requests',
+    'network-rtt',
+    'network-server-latency',
   ], port: chrome.port};
   try{
     const runnerResult = await lighthouse(url, options);
