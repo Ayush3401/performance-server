@@ -1,6 +1,5 @@
 const lighthouse = require('lighthouse');
 const chromeLauncher = require('chrome-launcher');
-const constants = require('./constants');
 
 const getAudits = async (url) => {
   const chrome = await chromeLauncher.launch({chromeFlags: ['--headless', '--disable-gpu']});

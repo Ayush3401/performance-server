@@ -3,7 +3,7 @@ const cors =require('cors');
 const app = express();
 app.use(cors());
 const {getAudits} = require('./lighthouse')
-const PORT = 8080;
+const PORT = 8000;
 
 app.get("/", async (req, res) => {
   const url = req.query.url
