@@ -1,8 +1,10 @@
 const express = require("express");
 const cors =require('cors');
 const app = express();
+const chromeLauncher = require("chrome-launcher");
 app.use(cors());
 const {getAudits} = require('./lighthouse')
+
 const PORT = 8080;
 
 app.get("/", async (req, res) => {
@@ -13,6 +15,9 @@ app.get("/", async (req, res) => {
   else res.status(500).send(audits)
 });
 
-app.listen(PORT, () => {
+app.listen(PORT,async () => {
   console.log(`Example app listening on port ${PORT}`);
+  await chromeLauncher.launch({
+    port: 12345,
+  });
 });
