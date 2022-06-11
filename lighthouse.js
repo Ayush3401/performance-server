@@ -1,9 +1,18 @@
 const lighthouse = require("lighthouse");
-const chromeLauncher = require("chrome-launcher");
+const CHROME_PORT = process.env.CHROME_PORT || 12345;
 
+/**
+ * Function get performance audits for a website using lighthouse
+ * @param {string} url url of website to test
+ * @param {object} headers additional headers to pass on e.g. Authorization, Cookie, etc
+ * @returns audits provided by lighthouse corresponding to the url, headers pair
+ */
 const getAudits = async (url, headers) => {
+  // Configurations for lighthhouse
   const options = {
-    logLevel: 'info',
+    // Desired log type
+    logLevel: "info",
+    // Desired audits from lighthouse
     onlyAudits: [
       "resource-summary",
       "mainthread-work-breakdown",
@@ -13,11 +22,15 @@ const getAudits = async (url, headers) => {
       "network-rtt",
       "network-server-latency",
     ],
-    port: 12345,
+    // Port of chrome instance we want to run lighthhouse on
+    port: CHROME_PORT,
+    // Headers to pass on e.g. Authorization, Cookie, etc
     extraHeaders: headers,
   };
+
   try {
     const runnerResult = await lighthouse(url, options);
+    // Extract audits from lighthouse result
     const audits = runnerResult.lhr.audits;
     return audits;
   } catch (err) {

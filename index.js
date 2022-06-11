@@ -1,23 +1,32 @@
-const express = require("express");
-const cors =require('cors');
-const app = express();
 const chromeLauncher = require("chrome-launcher");
-app.use(cors());
-const {getAudits} = require('./lighthouse')
+const dotenv = require("dotenv");
+const cors = require("cors");
+const express = require("express");
+const { getAudits } = require("./lighthouse");
 
-const PORT = 8080;
+const app = express();
+dotenv.config();
+app.use(cors());
+
+const SERVER_PORT = process.env.SERVER_PORT || 8080;
+const CHROME_PORT = process.env.CHROME_PORT || 12345;
 
 app.get("/", async (req, res) => {
-  const url = req.query.url
-  console.log(JSON.parse(req.query.headers))
-  const audits = await getAudits(url, JSON.parse(req.query.headers))
-  if(audits!=={}) res.send(audits)
-  else res.status(500).send(audits)
+  // Get url, headers from request params
+  const { url, headers } = req.query;
+  headers = JSON.parse(headers);
+
+  const audits = await getAudits(url, headers);
+
+  if (audits !== {}) res.send(audits);
+  else res.status(500).send(audits);
 });
 
-app.listen(PORT,async () => {
-  console.log(`Example app listening on port ${PORT}`);
+app.listen(SERVER_PORT, async () => {
+  console.log(`Server running on  http://localhost:${SERVER_PORT}`);
+  
   await chromeLauncher.launch({
-    port: 12345,
+    // On serve start launch chrome on CHROME_PORT
+    port: CHROME_PORT,
   });
 });
