@@ -1,5 +1,4 @@
 const lighthouse = require("lighthouse");
-const CHROME_PORT = process.env.CHROME_PORT || 12345;
 
 /**
  * Function get performance audits for a website using lighthouse
@@ -7,7 +6,7 @@ const CHROME_PORT = process.env.CHROME_PORT || 12345;
  * @param {object} headers additional headers to pass on e.g. Authorization, Cookie, etc
  * @returns audits provided by lighthouse corresponding to the url, headers pair
  */
-const getAudits = async (url, headers) => {
+const getAudits = async (url, headers, formactor, chromePort) => {
   // Configurations for lighthhouse
   const options = {
     // Desired log type
@@ -23,9 +22,10 @@ const getAudits = async (url, headers) => {
       "network-server-latency",
     ],
     // Port of chrome instance we want to run lighthhouse on
-    port: CHROME_PORT,
+    port: chromePort,
     // Headers to pass on e.g. Authorization, Cookie, etc
     extraHeaders: headers,
+    formactor,
   };
 
   try {
