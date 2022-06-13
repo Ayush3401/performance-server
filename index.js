@@ -13,10 +13,10 @@ const CHROME_PORT = process.env.CHROME_PORT || 12345;
 
 app.get("/", async (req, res) => {
   // Get url, headers from request params
-  let { url, headers, formfactor } = req.query;
+  let { url, headers, formFactor } = req.query;
   headers = JSON.parse(headers);
 
-  const audits = await getAudits(url, headers, formfactor, CHROME_PORT);
+  const audits = await getAudits(url, headers, formFactor, CHROME_PORT);
 
   if (audits !== {}) res.send(audits);
   else res.status(500).send(audits);
