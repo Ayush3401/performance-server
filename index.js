@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const express = require("express");
 const { getAudits } = require("./lighthouse");
+const puppeteer = require('puppeteer');
 
 const app = express();
 dotenv.config();
@@ -10,13 +11,14 @@ app.use(cors());
 
 const SERVER_PORT = process.env.SERVER_PORT || 8080;
 const CHROME_PORT = process.env.CHROME_PORT || 12345;
+let browser
 
 app.get("/", async (req, res) => {
   // Get url, headers from request params
   let { url, headers, formFactor } = req.query;
   headers = JSON.parse(headers);
 
-  const audits = await getAudits(url, headers, formFactor, CHROME_PORT);
+  const audits = await getAudits(url, headers, formFactor, browser);
 
   if (audits !== {}) res.send(audits);
   else res.status(500).send(audits);
@@ -25,8 +27,9 @@ app.get("/", async (req, res) => {
 app.listen(SERVER_PORT, async () => {
   console.log(`Server running on  http://localhost:${SERVER_PORT}`);
 
-  await chromeLauncher.launch({
-    // On serve start launch chrome on CHROME_PORT
-    port: CHROME_PORT,
+  browser = await puppeteer.launch({
+    args: [`--remote-debugging-port=${CHROME_PORT}`],
+    // Optional, if you want to see the tests in action.
+    headless: false,
   });
 });
