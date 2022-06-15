@@ -1,4 +1,4 @@
-const lighthouse = require("lighthouse");
+const lighthouse = require("audit-tool");
 const config = require("./config")
 /**
  * Function get performance audits for a website using lighthouse
