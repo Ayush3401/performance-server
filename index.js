@@ -15,10 +15,10 @@ let browser
 
 app.get("/", async (req, res) => {
   // Get url, headers from request params
-  let { url, headers, formFactor } = req.query;
+  let { url, headers, formFactor, waitTime } = req.query;
   headers = JSON.parse(headers);
 
-  const audits = await getAudits(url, headers, formFactor, browser);
+  const audits = await getAudits(url, headers, formFactor, browser, waitTime);
 
   if (audits !== {}) res.send(audits);
   else res.status(500).send(audits);

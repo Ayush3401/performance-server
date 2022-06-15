@@ -10,6 +10,7 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
   // Configurations for lighthhouse
   try {
     const page = await browser.newPage();
+    await page.setCacheEnabled(false);
     let options = config.getOptions(formFactor, headers);
     const flow = await lighthouse.startFlow(page, {
       configContext: {
@@ -22,6 +23,7 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
       setTimeout(r, waitTime ? Math.min(15000, waitTime) : waitTime)
     );
     await flow.endTimespan();
+    await page.close()
     let report = await flow.createFlowResult();
     return report.steps[0].lhr.audits;
   } catch (err) {
