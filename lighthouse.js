@@ -11,6 +11,7 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
   try {
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
+    await page.setDefaultNavigationTimeout(0); 
     let options = config.getOptions(formFactor, headers);
     const flow = await lighthouse.startFlow(page, {
       configContext: {
@@ -19,8 +20,9 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
     });
     await flow.startTimespan();
     await page.goto(url);
+    console.log(waitTime)
     await new Promise((r) =>
-      setTimeout(r, waitTime ? Math.min(15000, waitTime) : waitTime)
+      setTimeout(r, waitTime ? Math.min(60000, waitTime) : 60000)
     );
     await flow.endTimespan();
     await page.close()
