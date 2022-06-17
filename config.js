@@ -7,7 +7,6 @@ const DEFAULT_CONFIG = {
     "resource-summary",
     "mainthread-work-breakdown",
     "bootup-time",
-    "third-party-summary",
     "network-requests",
     "network-rtt",
     "network-server-latency",

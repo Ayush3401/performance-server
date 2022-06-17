@@ -10,10 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "audit-tool": "^0.0.4",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "lighthouse": "^9.6.2",
     "puppeteer": "^14.4.0"
   },
   "devDependencies": {
