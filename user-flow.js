@@ -228,6 +228,7 @@ async function auditGatherSteps(gatherSteps, options) {
     }
 
     const result = await Runner.audit(artifacts, runnerOptions);
+    console.log(ThirdPartySummary)
     const thirdPartyResult = await ThirdPartySummary.audit(
       artifacts,
       runnerOptions

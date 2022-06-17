@@ -13,7 +13,7 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
     await page.setCacheEnabled(false);
     await page.setDefaultNavigationTimeout(0);
     let options = config.getOptions(formFactor, headers);
-    const flow = await new UserFlow(page, {
+    const flow = new UserFlow(page, {
       configContext: {
         settingsOverrides: options,
       },
