@@ -110,29 +110,33 @@ class ThirdPartySummary extends Audit {
       resourceSize: 0,
     };
     /** @type {Map<string, Summary>} */
+    const jsURLs = getJavaScriptURLs(networkRecords);
+
     const byURL = new Map();
     for (const request of networkRecords) {
+      if(!jsURLs.has(request.url)) continue
       const urlSummary = byURL.get(request.url) || { ...defaultSummary };
       urlSummary.transferSize += request.transferSize;
       urlSummary.resourceSize += request.resourceSize;
       byURL.set(request.url, urlSummary);
     }
 
-    const jsURLs = getJavaScriptURLs(networkRecords);
 
     for (const task of mainThreadTasks) {
       const attributableURL = getAttributableURLForTask(task, jsURLs);
-
-      const urlSummary = byURL.get(attributableURL) || { ...defaultSummary };
-      const taskDuration = task.selfTime * cpuMultiplier;
-      // The amount of time spent on main thread is the sum of all durations.
-      urlSummary.mainThreadTime += taskDuration;
-      // The amount of time spent *blocking* on main thread is the sum of all time longer than 50ms.
-      // Note that this is not totally equivalent to the TBT definition since it fails to account for FCP,
-      // but a majority of third-party work occurs after FCP and should yield largely similar numbers.
-      urlSummary.blockingTime += Math.max(taskDuration - 50, 0);
-      byURL.set(attributableURL, urlSummary);
+      if(jsURLs.has(attributableURL)){
+        const urlSummary = byURL.get(attributableURL) || { ...defaultSummary };
+        const taskDuration = task.selfTime * cpuMultiplier;
+        // The amount of time spent on main thread is the sum of all durations.
+        urlSummary.mainThreadTime += taskDuration;
+        // The amount of time spent *blocking* on main thread is the sum of all time longer than 50ms.
+        // Note that this is not totally equivalent to the TBT definition since it fails to account for FCP,
+        // but a majority of third-party work occurs after FCP and should yield largely similar numbers.
+        urlSummary.blockingTime += Math.max(taskDuration - 50, 0);
+        byURL.set(attributableURL, urlSummary);
+      }
     }
+
     // Map each URL's stat to a particular third party entity.
     /** @type {Map<ThirdPartyEntity, string[]>} */
     const urls = new Map();
@@ -149,6 +153,7 @@ class ThirdPartySummary extends Audit {
       entityURLs.push(url);
       urls.set(entity, entityURLs);
     }
+
     return { byURL, byEntity, urls };
   }
 
@@ -170,7 +175,7 @@ class ThirdPartySummary extends Audit {
         (a, b) =>
           b.blockingTime - a.blockingTime ||
           b.transferSize - a.transferSize ||
-          b.resourceSize - audit.resourceSize
+          b.resourceSize - a.resourceSize
       );
 
     const subitemSummary = {
@@ -223,6 +228,7 @@ class ThirdPartySummary extends Audit {
       tasks,
       multiplier
     );
+    // console.log(summaries.urls)
     const overallSummary = { wastedBytes: 0, wastedMs: 0 };
 
     const results = Array.from(summaries.byEntity.entries())
