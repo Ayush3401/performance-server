@@ -114,17 +114,16 @@ class ThirdPartySummary extends Audit {
 
     const byURL = new Map();
     for (const request of networkRecords) {
-      if(!jsURLs.has(request.url)) continue
+      if (!jsURLs.has(request.url)) continue;
       const urlSummary = byURL.get(request.url) || { ...defaultSummary };
       urlSummary.transferSize += request.transferSize;
       urlSummary.resourceSize += request.resourceSize;
       byURL.set(request.url, urlSummary);
     }
 
-
     for (const task of mainThreadTasks) {
       const attributableURL = getAttributableURLForTask(task, jsURLs);
-      if(jsURLs.has(attributableURL)){
+      if (jsURLs.has(attributableURL)) {
         const urlSummary = byURL.get(attributableURL) || { ...defaultSummary };
         const taskDuration = task.selfTime * cpuMultiplier;
         // The amount of time spent on main thread is the sum of all durations.
@@ -254,6 +253,7 @@ class ThirdPartySummary extends Audit {
       // Sort by blocking time first, then transfer size to break ties.
       .sort(
         (a, b) =>
+          b.mainThreadTime - a.mainThreadTime ||
           b.blockingTime - a.blockingTime ||
           b.transferSize - a.transferSize ||
           b.resourceSize - a.resourceSize

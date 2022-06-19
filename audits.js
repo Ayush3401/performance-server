@@ -1,5 +1,9 @@
 const config = require("./config");
 const { UserFlow } = require("./user-flow");
+require("dotenv").config();
+
+const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
+
 /**
  * Function get performance audits for a website using lighthouse
  * @param {string} url url of website to test
@@ -9,22 +13,26 @@ const { UserFlow } = require("./user-flow");
 const getAudits = async (url, headers, formFactor, browser, waitTime) => {
   // Configurations for lighthhouse
   try {
+    let options = config.getOptions(formFactor, headers);
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
     await page.setDefaultNavigationTimeout(0);
-    let options = config.getOptions(formFactor, headers);
     const flow = new UserFlow(page, {
       configContext: {
         settingsOverrides: options,
       },
     });
-    await flow.startTimespan();
-    await page.goto(url);
-    console.log(waitTime);
-    await new Promise((r) =>
-      setTimeout(r, waitTime ? Math.min(60000, waitTime) : 60000)
-    );
-    await flow.endTimespan();
+    if (isNaN(waitTime) || waitTime === 0) await flow.navigate(url);
+    else {
+      await flow.startTimespan();
+      await page.goto(url, {
+        waitUntil: "networkidle0",
+      });
+      await new Promise((r) =>
+        setTimeout(r, Math.min(MAX_WAIT_TIME, waitTime))
+      );
+      await flow.endTimespan();
+    }
     await page.close();
     let report = await flow.createFlowResult();
     return report.steps[0].lhr.audits;
