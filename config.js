@@ -8,8 +8,8 @@ const DEFAULT_CONFIG = {
     "mainthread-work-breakdown",
     "bootup-time",
     "network-requests",
-    "network-rtt",
-    "network-server-latency",
+    "unminified-javascript",
+    "unused-javascript"
   ],
   // Maximum wait time in ms for first contentful paint
   maxWaitForFcp: 15 * 1000,

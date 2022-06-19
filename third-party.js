@@ -228,7 +228,6 @@ class ThirdPartySummary extends Audit {
       tasks,
       multiplier
     );
-    // console.log(summaries.urls)
     const overallSummary = { wastedBytes: 0, wastedMs: 0 };
 
     const results = Array.from(summaries.byEntity.entries())
