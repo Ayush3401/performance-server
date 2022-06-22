@@ -108,6 +108,7 @@ class ThirdPartySummary extends Audit {
       blockingTime: 0,
       transferSize: 0,
       resourceSize: 0,
+      intervals: []
     };
     /** @type {Map<string, Summary>} */
     const jsURLs = getJavaScriptURLs(networkRecords);
@@ -132,6 +133,7 @@ class ThirdPartySummary extends Audit {
         // Note that this is not totally equivalent to the TBT definition since it fails to account for FCP,
         // but a majority of third-party work occurs after FCP and should yield largely similar numbers.
         urlSummary.blockingTime += Math.max(taskDuration - 50, 0);
+        urlSummary.intervals.push({startTime: task.startTime, endTime: task.endTime})
         byURL.set(attributableURL, urlSummary);
       }
     }
@@ -140,12 +142,28 @@ class ThirdPartySummary extends Audit {
     /** @type {Map<ThirdPartyEntity, string[]>} */
     const urls = new Map();
     for (const [url, urlSummary] of byURL.entries()) {
+      urlSummary.intervals.sort((a,b) => {
+        b.startTime - a.startTime
+      })
+      let intervals = []
+      for(let interval of urlSummary.intervals){
+        if(intervals.length ==0 || intervals.at(-1).endTime < interval.startTime){
+          intervals.push(interval)
+        }
+        else{
+          intervals.at(-1).endTime = Math.max(intervals.at(-1).endTime , interval.endTime)
+        }
+      }
+      urlSummary.intervals = intervals
+      byURL.set(url, urlSummary);
+
       const entity = validateUrl(url) ? new URL(url).host : "other";
       const entitySummary = byEntity.get(entity) || { ...defaultSummary };
       entitySummary.transferSize += urlSummary.transferSize;
       entitySummary.resourceSize += urlSummary.resourceSize;
       entitySummary.mainThreadTime += urlSummary.mainThreadTime;
       entitySummary.blockingTime += urlSummary.blockingTime;
+      entitySummary.intervals = entitySummary.intervals.concat(urlSummary.intervals)
       byEntity.set(entity, entitySummary);
 
       const entityURLs = urls.get(entity) || [];
@@ -153,6 +171,23 @@ class ThirdPartySummary extends Audit {
       urls.set(entity, entityURLs);
     }
 
+    for (const [entity, entitySummary] of byEntity.entries()) {
+      entitySummary.intervals.sort((a,b) => {
+        b.startTime - a.startTime
+      })
+      let intervals = []
+      for(let interval of entitySummary.intervals){
+        if(intervals.length ==0 || intervals.at(-1).endTime < interval.startTime){
+          intervals.push(interval)
+        }
+        else{
+          intervals.at(-1).endTime = Math.max(intervals.at(-1).endTime , interval.endTime)
+        }
+      }
+      entitySummary.intervals = intervals
+      byEntity.set(entity, entitySummary);
+    }
+    
     return { byURL, byEntity, urls };
   }
 
