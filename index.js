@@ -22,7 +22,6 @@ app.get("/", async (req, res) => {
     browser,
     Number(waitTime)
   );
-
   if (audits !== {}) res.send(audits);
   else res.status(500).send(audits);
 });
