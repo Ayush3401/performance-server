@@ -10,7 +10,8 @@ const DEFAULT_CONFIG = {
     "network-requests",
     "unminified-javascript",
     "unused-javascript",
-    'render-blocking-resources'
+    "render-blocking-resources",
+    "first-contentful-paint",
   ],
   // Maximum wait time in ms for first contentful paint
   maxWaitForFcp: 15 * 1000,

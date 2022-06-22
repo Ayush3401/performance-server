@@ -11,7 +11,7 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  * @returns audits provided by lighthouse corresponding to the url, headers pair
  */
 const getAudits = async (url, headers, formFactor, browser, waitTime) => {
-  let result=[];
+  let paintTimings;
   // Configurations for lighthhouse
   try {
     let options = config.getOptions(formFactor, headers);
@@ -26,20 +26,18 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
     if (isNaN(waitTime) || waitTime === 0) await flow.navigate(url);
     else {
       await flow.startTimespan();
-      await page.goto(url, {
-        waitUntil: "networkidle0",
-      });
-      result = await page.evaluate(function () {
-        return JSON.stringify(window.performance.getEntriesByType('paint'));
-      });
+      await page.goto(url);
       await new Promise((r) =>
         setTimeout(r, Math.min(MAX_WAIT_TIME, waitTime))
       );
+      paintTimings = await page.evaluate(function () {
+        return JSON.stringify(window.performance.getEntriesByType('paint'));
+      });
       await flow.endTimespan();
     }
     await page.close();
     let report = await flow.createFlowResult();
-    report.steps[0].lhr.audits.result=result;
+    if (!isNaN(waitTime) && waitTime > 0)  report.steps[0].lhr.audits.paintTimings=JSON.parse(paintTimings);
     return report.steps[0].lhr.audits;
   } catch (err) {
     console.error(err);
