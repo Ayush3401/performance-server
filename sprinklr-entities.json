@@ -2,9 +2,7 @@
   {
     "name": "Beamer",
     "domains": [
-        "app.getbeamer.com",
-        "static.getbeamer.com",
-        "realtime.getbeamer.com"
+        "*.getbeamer.com"
     ]
   }
 ]
