@@ -31,13 +31,21 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
         setTimeout(r, Math.min(MAX_WAIT_TIME, waitTime))
       );
       paintTimings = await page.evaluate(function () {
-        return JSON.stringify(window.performance.getEntriesByType('paint'));
+        return JSON.stringify(window.performance.getEntriesByType("paint"));
       });
       await flow.endTimespan();
     }
     await page.close();
     let report = await flow.createFlowResult();
-    if (!isNaN(waitTime) && waitTime > 0)  report.steps[0].lhr.audits.paintTimings=JSON.parse(paintTimings);
+    if (!isNaN(waitTime) && waitTime > 0) {
+      const fcp = JSON.parse(
+        paintTimings
+      ).find(({ name }) => name === "first-contentful-paint");
+      report.steps[0].lhr.audits["first-contentful-paint"] = {
+        id: "first-contentful-paint",
+        numericValue: fcp.startTime
+      }
+    }
     return report.steps[0].lhr.audits;
   } catch (err) {
     console.error(err);

@@ -4,5 +4,11 @@
     "domains": [
         "*.getbeamer.com"
     ]
+  },
+  {
+    "name": "Sprinklr Tracking",
+    "domains": [
+        "track.sprinklr.com"
+    ]
   }
 ]
