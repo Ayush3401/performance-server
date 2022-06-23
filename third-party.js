@@ -14,6 +14,8 @@ const {
   getJavaScriptURLs,
   getAttributableURLForTask,
 } = require("lighthouse/lighthouse-core/lib/tracehouse/task-summary.js");
+const { getEntity } = require("./entity-finder");
+const { URL } = require("lighthouse/lighthouse-core/lib/url-shim");
 
 /**
  *
@@ -182,6 +184,13 @@ class ThirdPartySummary extends Audit {
       entitySummary.intervals = entitySummary.intervals.concat(
         urlSummary.intervals
       );
+      if (!entitySummary.entityName) {
+        const entityName = getEntity(url);
+        if (entityName) {
+          entitySummary.entityName = entityName;
+          entitySummary.isThirdParty = true;
+        }
+      }
       byEntity.set(entity, entitySummary);
 
       const entityURLs = urls.get(entity) || [];
