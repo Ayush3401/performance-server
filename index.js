@@ -15,11 +15,9 @@ let browser;
 
 app.get("/", async (req, res) => {
   // Get url, headers from request params
-  let { url, headers, formFactor, waitTime } = req.query;
-  headers = JSON.parse(headers);
+  let { url, formFactor, waitTime } = req.query;
   const audits = await getAudits(
     url,
-    headers,
     formFactor,
     browser,
     Number(waitTime)

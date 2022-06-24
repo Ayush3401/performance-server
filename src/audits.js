@@ -12,7 +12,7 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  * @param {object} headers additional headers to pass on e.g. Authorization, Cookie, etc
  * @returns audits provided by lighthouse corresponding to the url, headers pair
  */
-const getAudits = async (url, headers, formFactor, browser, waitTime) => {
+const getAudits = async (url, formFactor, browser, waitTime) => {
   let paintTimings;
   const load = loading({
     text: `Analysing ${url}`.cyan,
@@ -23,7 +23,7 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
   }).start();
   // Configurations for lighthhouse
   try {
-    let options = config.getOptions(formFactor, headers);
+    let options = config.getOptions(formFactor);
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
     await page.setDefaultNavigationTimeout(0);

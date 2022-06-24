@@ -52,13 +52,12 @@ const DESKTOP_CONFIG = {
  * @param {Number} chromePort Port of chrom on which lighthouse will run
  * @returns Options
  */
-function getOptions(deviceType, headers) {
+function getOptions(deviceType) {
   return deviceType === "mobile"
-    ? { ...DEFAULT_CONFIG, extraHeaders: headers }
+    ? { ...DEFAULT_CONFIG }
     : {
         ...DEFAULT_CONFIG,
-        ...DESKTOP_CONFIG,
-        extraHeaders: headers,
+        ...DESKTOP_CONFIG
       };
 }
 
