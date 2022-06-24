@@ -32,5 +32,8 @@ app.listen(SERVER_PORT, async () => {
   browser = await puppeteer.launch({
     // Optional, if you want to see the tests in action.
     headless: false,
+    defaultViewport: null
   });
+  const page = await browser.newPage()
+  await page.goto('https://analyser.netlify.app')
 });
