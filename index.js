@@ -1,7 +1,9 @@
+#!/usr/bin/env node
+
 const dotenv = require("dotenv");
 const cors = require("cors");
 const express = require("express");
-const { getAudits } = require("./audits");
+const { getAudits } = require("./src/audits");
 const puppeteer = require("puppeteer");
 
 const app = express();
@@ -27,11 +29,8 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(SERVER_PORT, async () => {
-  console.log(`Server running on  http://localhost:${SERVER_PORT}`);
-
   browser = await puppeteer.launch({
     // Optional, if you want to see the tests in action.
     headless: false,
   });
-  console.log("New Chromium instance launched!!");
 });

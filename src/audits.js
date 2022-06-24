@@ -1,6 +1,8 @@
 const config = require("./config");
 const { UserFlow } = require("./user-flow");
 require("dotenv").config();
+const colors = require("colors");
+const loading = require("loading-cli");
 
 const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
 
@@ -12,6 +14,13 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  */
 const getAudits = async (url, headers, formFactor, browser, waitTime) => {
   let paintTimings;
+  const load = loading({
+    text: `Analysing ${url}`.cyan,
+    color: "green",
+    interval: 80,
+    stream: process.stdout,
+    frames: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+  }).start();
   // Configurations for lighthhouse
   try {
     let options = config.getOptions(formFactor, headers);
@@ -46,9 +55,10 @@ const getAudits = async (url, headers, formFactor, browser, waitTime) => {
         numericValue: fcp.startTime
       }
     }
+    load.succeed(`Generated Report for ${url}`.green)
     return report.steps[0].lhr.audits;
   } catch (err) {
-    console.error(err);
+    load.fail(`${err}`.red);
     return {};
   }
 };
