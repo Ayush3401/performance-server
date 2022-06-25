@@ -5,7 +5,7 @@ const cors = require("cors");
 const express = require("express");
 const { getAudits } = require("./src/audits");
 const puppeteer = require("puppeteer");
-const { writeNewRecord, readMetadata, readRecord } = require("./src/db");
+const { writeNewRecord, readMetadata, readRecord, createMetadata } = require("./src/db");
 
 const app = express();
 dotenv.config();
@@ -47,4 +47,5 @@ app.listen(SERVER_PORT, async () => {
   });
   const page = await browser.newPage();
   await page.goto("https://analyser.netlify.app");
+  createMetadata()
 });

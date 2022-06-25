@@ -1,5 +1,17 @@
 const fs = require("fs");
 
+function createMetadata() {
+  const dir = __dirname + `/../db`;
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  if (!fs.existsSync(dir + "/meta.json")) {
+    fs.writeFile(dir + "/meta.json", JSON.stringify([]), (err) => {
+      if (err) throw err;
+    });
+  }
+}
+
 function updateMetadata(url, formFactor, waitTime, dateString) {
   fs.readFile(__dirname + `/../db/meta.json`, "utf8", function (err, data) {
     if (err) throw err;
@@ -10,9 +22,13 @@ function updateMetadata(url, formFactor, waitTime, dateString) {
       waitTime,
       dateString,
     });
-    fs.writeFile(__dirname + `/../db/meta.json`, JSON.stringify(data), (err) => {
-      if (err) throw err;
-    });
+    fs.writeFile(
+      __dirname + `/../db/meta.json`,
+      JSON.stringify(data),
+      (err) => {
+        if (err) throw err;
+      }
+    );
   });
 }
 
@@ -33,15 +49,12 @@ function readMetadata(callback) {
 }
 
 function readRecord(filename, callback) {
-  fs.readFile(
-    __dirname + `/../db/${filename}.json`,
-    "utf8",
-    callback
-  );
+  fs.readFile(__dirname + `/../db/${filename}.json`, "utf8", callback);
 }
 
 module.exports = {
   writeNewRecord,
   readMetadata,
   readRecord,
+  createMetadata,
 };
