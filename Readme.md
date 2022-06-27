@@ -24,12 +24,13 @@
 
 ### Installing
 ```
-npm install -g third-party-analyser
+git clone https://github.com/ayushgupta21/performance-server
 ```
 
 ### Running
 ```
-third-party-analyser
+cd performance-server
+npm start
 ```
 
 ## ⛏️ Built Using <a name = "built_using"></a>
