@@ -19,8 +19,10 @@ app.get("/", async (req, res) => {
   let { url, formFactor, waitTime } = req.query;
   const audits = await getAudits(url, formFactor, browser, Number(waitTime));
   if (audits === {}) res.status(500).send(audits);
-  writeNewRecord(url, formFactor, waitTime, audits);
-  res.send(audits);
+  else{
+    writeNewRecord(url, formFactor, waitTime, audits);
+    res.send(audits);
+  }
 });
 
 app.get("/audits/", function (req, res) {
