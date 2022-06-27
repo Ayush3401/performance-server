@@ -1,10 +1,3 @@
-/**
- * @license Copyright 2021 The Lighthouse Authors. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
- */
-"use strict";
-
 const {
   generateFlowReportHtml,
 } = require("lighthouse/report/generator/report-generator.js");
@@ -23,10 +16,6 @@ const {
 } = require("lighthouse/lighthouse-core/fraggle-rock/config/config.js");
 const { ThirdPartySummary } = require("./third-party");
 
-/** @typedef {Parameters<snapshotGather>[0]} FrOptions */
-/** @typedef {Omit<FrOptions, 'page'> & {name?: string}} UserFlowOptions */
-/** @typedef {Omit<FrOptions, 'page'> & {stepName?: string}} StepOptions */
-/** @typedef {WeakMap<LH.UserFlow.GatherStep, LH.Gatherer.FRGatherResult['runnerOptions']>} GatherStepRunnerOptions */
 
 class UserFlow {
   /**
@@ -34,13 +23,9 @@ class UserFlow {
    * @param {UserFlowOptions=} options
    */
   constructor(page, options) {
-    /** @type {FrOptions} */
     this.options = { page, ...options };
-    /** @type {string|undefined} */
     this.name = options?.name;
-    /** @type {LH.UserFlow.GatherStep[]} */
     this._gatherSteps = [];
-    /** @type {GatherStepRunnerOptions} */
     this._gatherStepRunnerOptions = new WeakMap();
   }
 

@@ -20,9 +20,11 @@
 - [Authors](#authors)
 
 ## 🏁 Getting Started <a name = "getting_started"></a>
+
 <br />
 
 ### Installing
+
 ```
 git clone https://github.com/ayushgupta21/performance-server
 cd performance-server
@@ -30,9 +32,16 @@ npm install
 ```
 
 ### Running
+
 ```
 npm start
 ```
+
+### Authenticated Pages
+
+<p > To test an authenticated page login to the website first in the chromium instance.
+    <br> 
+</p>
 
 ## ⛏️ Built Using <a name = "built_using"></a>
 
@@ -42,4 +51,3 @@ npm start
 
 - [@ayushgupta21](https://github.com/ayushgupta21)
 - [@shantanu-goyal](https://github.com/shantanu-goyal)
-

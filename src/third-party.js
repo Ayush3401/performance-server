@@ -1,11 +1,3 @@
-// @ts-nocheck
-/**
- * @license Copyright 2019 The Lighthouse Authors. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
- */
-"use strict";
-
 const Audit = require("lighthouse/lighthouse-core/audits/audit");
 const i18n = require("lighthouse/lighthouse-core/lib/i18n/i18n");
 const NetworkRecords = require("lighthouse/lighthouse-core/computed/network-records.js");
@@ -48,39 +40,6 @@ const UIStrings = {
 const str_ = i18n.createMessageInstanceIdFn(__filename, UIStrings);
 
 // A page passes when all third-party code blocks for less than 250 ms.
-const PASS_THRESHOLD_IN_MS = 250;
-
-/** @typedef {import("third-party-web").IEntity} ThirdPartyEntity */
-
-/**
- * @typedef Summary
- * @property {number} mainThreadTime
- * @property {number} transferSize
- * @property {number} blockingTime
- */
-
-/**
- * @typedef URLSummary
- * @property {number} transferSize
- * @property {number} blockingTime
- * @property {string | LH.IcuMessage} url
- */
-
-/** @typedef SummaryMaps
- * @property {Map<ThirdPartyEntity, Summary>} byEntity Map of impact summaries for each entity.
- * @property {Map<string, Summary>} byURL Map of impact summaries for each URL.
- * @property {Map<ThirdPartyEntity, string[]>} urls Map of URLs under each entity.
- */
-
-/**
- * Don't bother showing resources smaller than 4KiB since they're likely to be pixels, which isn't
- * too actionable.
- */
-const MIN_TRANSFER_SIZE_FOR_SUBITEMS = 0;
-
-/** Show at most 5 sub items in the resource breakdown. */
-const MAX_SUBITEMS = 100;
-
 class ThirdPartySummary extends Audit {
   /**
    * @return {LH.Audit.Meta}
@@ -367,7 +326,6 @@ class ThirdPartySummary extends Audit {
     }
 
     return {
-      score: Number(overallSummary.wastedMs <= PASS_THRESHOLD_IN_MS),
       displayValue: str_(UIStrings.displayValue, {
         timeInMs: overallSummary.wastedMs,
       }),
