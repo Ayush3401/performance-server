@@ -25,11 +25,12 @@
 ### Installing
 ```
 git clone https://github.com/ayushgupta21/performance-server
+cd performance-server
+npm install
 ```
 
 ### Running
 ```
-cd performance-server
 npm start
 ```
 
