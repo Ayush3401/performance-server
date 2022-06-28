@@ -46,10 +46,8 @@ const DESKTOP_CONFIG = {
 };
 
 /**
- * Return options for lighthouse according to given params
+ * Return options for lighthouse user flow according to given params
  * @param {String} deviceType Type of device
- * @param {Object} headers Headers to add in configuration
- * @param {Number} chromePort Port of chrom on which lighthouse will run
  * @returns Options
  */
 function getOptions(deviceType) {
@@ -57,7 +55,7 @@ function getOptions(deviceType) {
     ? { ...DEFAULT_CONFIG }
     : {
         ...DEFAULT_CONFIG,
-        ...DESKTOP_CONFIG
+        ...DESKTOP_CONFIG,
       };
 }
 

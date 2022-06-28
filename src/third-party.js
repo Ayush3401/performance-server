@@ -1,5 +1,4 @@
 const Audit = require("lighthouse/lighthouse-core/audits/audit");
-const i18n = require("lighthouse/lighthouse-core/lib/i18n/i18n");
 const NetworkRecords = require("lighthouse/lighthouse-core/computed/network-records.js");
 const MainThreadTasks = require("lighthouse/lighthouse-core/computed/main-thread-tasks.js");
 const {
@@ -7,8 +6,6 @@ const {
   getAttributableURLForTask,
 } = require("lighthouse/lighthouse-core/lib/tracehouse/task-summary.js");
 const { getEntity } = require("./entity-finder");
-const { URL } = require("lighthouse/lighthouse-core/lib/url-shim");
-
 /**
  *
  * @param {String} url
@@ -21,23 +18,16 @@ function validateUrl(url) {
 }
 
 const UIStrings = {
-  /** Title of a diagnostic audit that provides details about the code on a web page that the user doesn't control (referred to as "third-party code"). This descriptive title is shown to users when the amount is acceptable and no user action is required. */
   title: "Minimize third-party usage",
-  /** Title of a diagnostic audit that provides details about the code on a web page that the user doesn't control (referred to as "third-party code"). This imperative title is shown to users when there is a significant amount of page execution time caused by third-party code that should be reduced. */
-  failureTitle: "Reduce the impact of third-party code",
-  /** Description of a Lighthouse audit that identifies the code on the page that the user doesn't control. This is displayed after a user expands the section to see more. No character length limits. 'Learn More' becomes link text to additional documentation. */
   description:
     "Third-party code can significantly impact load performance. " +
     "Limit the number of redundant third-party providers and try to load third-party code after " +
     "your page has primarily finished loading. [Learn more](https://developers.google.com/web/fundamentals/performance/optimizing-content-efficiency/loading-third-party-javascript/).",
-  /** Label for a table column that displays the name of a third-party provider that potentially links to their website. */
   columnThirdParty: "Third-Party",
-  /** Summary text for the result of a Lighthouse audit that identifies the code on a web page that the user doesn't control (referred to as "third-party code"). This text summarizes the number of distinct entities that were found on the page. */
   displayValue:
     "Third-party code blocked the main thread for " +
     `{timeInMs, number, milliseconds}\xa0ms`,
 };
-const str_ = i18n.createMessageInstanceIdFn(__filename, UIStrings);
 
 // A page passes when all third-party code blocks for less than 250 ms.
 class ThirdPartySummary extends Audit {
@@ -47,9 +37,9 @@ class ThirdPartySummary extends Audit {
   static get meta() {
     return {
       id: "third-party-summary",
-      title: str_(UIStrings.title),
-      failureTitle: str_(UIStrings.failureTitle),
-      description: str_(UIStrings.description),
+      title: UIStrings.title,
+      failureTitle: UIStrings.failureTitle,
+      description: UIStrings.description,
       requiredArtifacts: ["traces", "devtoolsLogs", "URL"],
     };
   }
@@ -218,13 +208,6 @@ class ThirdPartySummary extends Audit {
     // Only show the top N entries for brevity. If there is more than one remaining entry
     // we'll replace the tail entries with single remainder entry.
     items = items.slice(0, numSubItems);
-    const remainder = {
-      url: str_(i18n.UIStrings.otherResourcesLabel),
-      transferSize: stats.transferSize - subitemSummary.transferSize,
-      blockingTime: stats.blockingTime - subitemSummary.blockingTime,
-      resourceSize: stats.resourceSize - subitemSummary.resourceSize,
-    };
-    items.push(remainder);
     return items;
   }
 
@@ -291,44 +274,34 @@ class ThirdPartySummary extends Audit {
       {
         key: "entity",
         itemType: "link",
-        text: str_(UIStrings.columnThirdParty),
+        text: UIStrings.columnThirdParty,
         subItemsHeading: { key: "url", itemType: "url" },
       },
       {
         key: "transferSize",
         granularity: 1,
         itemType: "bytes",
-        text: str_(i18n.UIStrings.columnTransferSize),
+        text: "Transfer Size",
         subItemsHeading: { key: "transferSize" },
       },
       {
         key: "blockingTime",
         granularity: 1,
         itemType: "ms",
-        text: str_(i18n.UIStrings.columnBlockingTime),
+        text: "Main-thread Blocking Time",
         subItemsHeading: { key: "blockingTime" },
       },
       {
         key: "resourceSize",
         granularity: 1,
         itemType: "bytes",
-        text: str_(i18n.UIStrings.columnResourceSize),
+        text: "Resource Size",
         subItemsHeading: { key: "resourceSize" },
       },
       /* eslint-enable max-len */
     ];
 
-    if (!results.length) {
-      return {
-        score: 1,
-        notApplicable: true,
-      };
-    }
-
     return {
-      displayValue: str_(UIStrings.displayValue, {
-        timeInMs: overallSummary.wastedMs,
-      }),
       details: Audit.makeTableDetails(headings, results, overallSummary),
     };
   }

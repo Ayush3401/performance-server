@@ -4,3 +4,4 @@ package-lock.json
 Icon?
 db/
 .vscode/
+.DS_Store

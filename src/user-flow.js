@@ -1,10 +1,4 @@
 const {
-  generateFlowReportHtml,
-} = require("lighthouse/report/generator/report-generator.js");
-const {
-  snapshotGather,
-} = require("lighthouse/lighthouse-core/fraggle-rock/gather/snapshot-runner.js");
-const {
   startTimespanGather,
 } = require("lighthouse/lighthouse-core/fraggle-rock/gather/timespan-runner.js");
 const {
@@ -15,7 +9,6 @@ const {
   initializeConfig,
 } = require("lighthouse/lighthouse-core/fraggle-rock/config/config.js");
 const { ThirdPartySummary } = require("./third-party");
-
 
 class UserFlow {
   /**
@@ -138,20 +131,6 @@ class UserFlow {
   }
 
   /**
-   * @param {StepOptions=} stepOptions
-   */
-  async snapshot(stepOptions) {
-    if (this.currentTimespan) throw new Error("Timespan already in progress");
-
-    const options = { ...this.options, ...stepOptions };
-    const gatherResult = await snapshotGather(options);
-
-    this._addGatherStep(gatherResult, options);
-
-    return gatherResult;
-  }
-
-  /**
    * @returns {Promise<LH.FlowResult>}
    */
   async createFlowResult() {
@@ -160,24 +139,6 @@ class UserFlow {
       config: this.options.config,
       gatherStepRunnerOptions: this._gatherStepRunnerOptions,
     });
-  }
-
-  /**
-   * @return {Promise<string>}
-   */
-  async generateReport() {
-    const flowResult = await this.createFlowResult();
-    return generateFlowReportHtml(flowResult);
-  }
-
-  /**
-   * @return {LH.UserFlow.FlowArtifacts}
-   */
-  createArtifactsJson() {
-    return {
-      gatherSteps: this._gatherSteps,
-      name: this.name,
-    };
   }
 }
 
@@ -217,7 +178,7 @@ async function auditGatherSteps(gatherSteps, options) {
       artifacts,
       runnerOptions
     );
-    result.lhr.audits["third-party-summary"] = thirdPartyResult
+    result.lhr.audits["third-party-summary"] = thirdPartyResult;
     if (!result) throw new Error(`Step "${name}" did not return a result`);
     steps.push({ lhr: result.lhr, name });
   }

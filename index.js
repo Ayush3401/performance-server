@@ -5,7 +5,12 @@ const cors = require("cors");
 const express = require("express");
 const { getAudits } = require("./src/audits");
 const puppeteer = require("puppeteer");
-const { writeNewRecord, readMetadata, readRecord, createMetadata } = require("./src/db");
+const {
+  writeNewRecord,
+  readMetadata,
+  readRecord,
+  createMetadata,
+} = require("./src/db");
 
 const app = express();
 dotenv.config();
@@ -19,7 +24,7 @@ app.get("/", async (req, res) => {
   let { url, formFactor, waitTime } = req.query;
   const audits = await getAudits(url, formFactor, browser, Number(waitTime));
   if (audits === {}) res.status(500).send(audits);
-  else{
+  else {
     writeNewRecord(url, formFactor, waitTime, audits);
     res.send(audits);
   }
@@ -49,5 +54,5 @@ app.listen(SERVER_PORT, async () => {
   });
   const page = await browser.newPage();
   await page.goto("https://analyser.netlify.app");
-  createMetadata()
+  createMetadata();
 });
