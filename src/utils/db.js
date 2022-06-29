@@ -1,16 +1,15 @@
 const fs = require("fs");
-
+const DB_DIRECTORY = __dirname + '/../../db'
 /**
  * This function checks if db/ folder exists and if not create it and a meta file inside it
  */
 function createMetadata() {
-  const dir = __dirname + `/../db`;
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir);
+  if (!fs.existsSync(DB_DIRECTORY)) {
+    fs.mkdirSync(DB_DIRECTORY);
   }
-  if (!fs.existsSync(dir + "/meta.json")) {
+  if (!fs.existsSync(DB_DIRECTORY + "/meta.json")) {
     // Create meta file with empty array as data
-    fs.writeFile(dir + "/meta.json", JSON.stringify([]), (err) => {
+    fs.writeFile(DB_DIRECTORY + "/meta.json", JSON.stringify([]), (err) => {
       if (err) throw err;
     });
   }
@@ -24,7 +23,7 @@ function createMetadata() {
  * @param {String} dateString 
  */
 function updateMetadata(url, formFactor, waitTime, dateString) {
-  fs.readFile(__dirname + `/../db/meta.json`, "utf8", function (err, data) {
+  fs.readFile(DB_DIRECTORY + `/meta.json`, "utf8", function (err, data) {
     if (err) throw err;
     data = JSON.parse(data);
     data.push({
@@ -34,7 +33,7 @@ function updateMetadata(url, formFactor, waitTime, dateString) {
       dateString,
     });
     fs.writeFile(
-      __dirname + `/../db/meta.json`,
+      DB_DIRECTORY + `/meta.json`,
       JSON.stringify(data),
       (err) => {
         if (err) throw err;
@@ -53,7 +52,7 @@ function updateMetadata(url, formFactor, waitTime, dateString) {
 function writeNewRecord(url, formFactor, waitTime, audits) {
   const dateString = new Date().toJSON();
   fs.writeFile(
-    __dirname + `/../db/${dateString}.json`,
+    DB_DIRECTORY + `/${dateString}.json`,
     JSON.stringify(audits),
     (err) => {
       if (err) throw err;
@@ -66,7 +65,7 @@ function writeNewRecord(url, formFactor, waitTime, audits) {
  * @param {Function} callback 
  */
 function readMetadata(callback) {
-  fs.readFile(__dirname + `/../db/meta.json`, "utf8", callback);
+  fs.readFile(DB_DIRECTORY + `/meta.json`, "utf8", callback);
 }
 
 
@@ -75,7 +74,7 @@ function readMetadata(callback) {
  * @param {Function} callback
  */
 function readRecord(filename, callback) {
-  fs.readFile(__dirname + `/../db/${filename}.json`, "utf8", callback);
+  fs.readFile(DB_DIRECTORY + `/${filename}.json`, "utf8", callback);
 }
 
 module.exports = {
