@@ -1,10 +1,11 @@
-const config = require("./config");
-const { UserFlow } = require("./user-flow");
+const config = require("./utils/config");
+const { UserFlow } = require("./controllers/user-flow");
 require("dotenv").config();
 const colors = require("colors");
 const loading = require("loading-cli");
 const { Puppeteer } = require("puppeteer");
 
+// Maximum waiting time for analysis
 const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
 
 /**
@@ -16,7 +17,10 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  * @returns Combined self made and lighthouse audits
  */
 const getAudits = async (url, formFactor, browser, waitTime) => {
+  // paintTimings represents timing information for FCP
   let paintTimings;
+
+  // Show a loading statement on console
   const load = loading({
     text: `Analysing ${url}`.cyan,
     color: "green",
@@ -24,11 +28,14 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     stream: process.stdout,
     frames: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
   }).start();
+
   try {
+    // Options for lighthouse i.e. deviceType
     let options = config.getOptions(formFactor);
     const page = await browser.newPage();
-    // Remove navigation timeout error shown by pupperteer once the page doesn't load in 30 ms
+    // Remove navigation timeout error shown by puppeteer once the page doesn't load in 30 ms
     await page.setDefaultNavigationTimeout(0);
+    // Create a new lighthouse flow
     const flow = new UserFlow(page, {
       configContext: {
         settingsOverrides: options,
@@ -38,8 +45,9 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     if (isNaN(waitTime) || waitTime === 0) {
       await flow.navigate(url);
     }
-    // Tiespan flow
+    // Timespan flow
     else {
+      // Start a timespan flow
       await flow.startTimespan();
       await page.goto(url);
       // Waiting for waitTime
@@ -50,6 +58,7 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
       paintTimings = await page.evaluate(function () {
         return JSON.stringify(window.performance.getEntriesByType("paint"));
       });
+      // Stop the flow once the waiting time is over
       await flow.endTimespan();
     }
     await page.close();
@@ -66,7 +75,8 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     }
     load.succeed(`Generated Report for ${url}`.green);
     return report.steps[0].lhr.audits;
-  } catch (err) {
+  } 
+  catch (err) {
     load.fail(`${err}`.red);
     return {};
   }

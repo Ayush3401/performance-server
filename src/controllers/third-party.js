@@ -5,7 +5,8 @@ const {
   getJavaScriptURLs,
   getAttributableURLForTask,
 } = require("lighthouse/lighthouse-core/lib/tracehouse/task-summary.js");
-const { getEntity } = require("./entity-finder");
+const { getEntity } = require("../utils/entity-finder");
+
 /**
  *
  * @param {String} url
@@ -15,6 +16,30 @@ function validateUrl(url) {
   return /^(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:[/?#]\S*)?$/i.test(
     url
   );
+}
+
+function getMergedIntervals(intervals) {
+  intervals = intervals.sort(
+    (a, b) => Number(a.startTime) - Number(b.startTime)
+  );
+
+  const mergedIntervals = [];
+
+  for (let interval of intervals) {
+    if (
+      mergedIntervals.length == 0 ||
+      mergedIntervals.at(-1).endTime < interval.startTime
+    ) {
+      mergedIntervals.push(interval);
+    } else {
+      mergedIntervals.at(-1).endTime = Math.max(
+        mergedIntervals.at(-1).endTime,
+        interval.endTime
+      );
+    }
+  }
+
+  return mergedIntervals;
 }
 
 const UIStrings = {
@@ -54,29 +79,33 @@ class ThirdPartySummary extends Audit {
   static getSummaries(networkRecords, mainThreadTasks, cpuMultiplier) {
     /** @type {Map<ThirdPartyEntity, Summary>} */
     const byEntity = new Map();
+    const byURL = new Map();
     const defaultSummary = {
       mainThreadTime: 0,
       blockingTime: 0,
       transferSize: 0,
       resourceSize: 0,
     };
+
     /** @type {Map<string, Summary>} */
     const jsURLs = getJavaScriptURLs(networkRecords);
 
-    const byURL = new Map();
     for (const request of networkRecords) {
       if (!jsURLs.has(request.url)) continue;
       const urlSummary = byURL.get(request.url) || {
         ...defaultSummary,
         intervals: [],
       };
+
       urlSummary.transferSize += request.transferSize;
       urlSummary.resourceSize += request.resourceSize;
+
       byURL.set(request.url, urlSummary);
     }
 
     for (const task of mainThreadTasks) {
       const attributableURL = getAttributableURLForTask(task, jsURLs);
+
       if (jsURLs.has(attributableURL)) {
         const urlSummary = byURL.get(attributableURL) || {
           ...defaultSummary,
@@ -100,32 +129,17 @@ class ThirdPartySummary extends Audit {
     // Map each URL's stat to a particular third party entity.
     /** @type {Map<ThirdPartyEntity, string[]>} */
     const urls = new Map();
-    for (const [url, urlSummary] of byURL.entries()) {
-      urlSummary.intervals = urlSummary.intervals.sort(
-        (a, b) => Number(a.startTime) - Number(b.startTime)
-      );
-      const intervals = [];
-      for (let interval of urlSummary.intervals) {
-        if (
-          intervals.length == 0 ||
-          intervals.at(-1).endTime < interval.startTime
-        ) {
-          intervals.push(interval);
-        } else {
-          intervals.at(-1).endTime = Math.max(
-            intervals.at(-1).endTime,
-            interval.endTime
-          );
-        }
-      }
-      urlSummary.intervals = intervals;
-      byURL.set(url, urlSummary);
 
+    for (const [url, urlSummary] of byURL.entries()) {
+      urlSummary.intervals = getMergedIntervals(urlSummary.intervals);
+      byURL.set(url, urlSummary);
       const entity = validateUrl(url) ? new URL(url).host : "other";
+
       const entitySummary = byEntity.get(entity) || {
         ...defaultSummary,
         intervals: [],
       };
+
       entitySummary.transferSize += urlSummary.transferSize;
       entitySummary.resourceSize += urlSummary.resourceSize;
       entitySummary.mainThreadTime += urlSummary.mainThreadTime;
@@ -133,6 +147,7 @@ class ThirdPartySummary extends Audit {
       entitySummary.intervals = entitySummary.intervals.concat(
         urlSummary.intervals
       );
+
       if (!entitySummary.entityName) {
         const entityName = getEntity(url);
         if (entityName) {
@@ -140,32 +155,15 @@ class ThirdPartySummary extends Audit {
           entitySummary.isThirdParty = true;
         }
       }
-      byEntity.set(entity, entitySummary);
 
+      byEntity.set(entity, entitySummary);
       const entityURLs = urls.get(entity) || [];
       entityURLs.push(url);
       urls.set(entity, entityURLs);
     }
 
     for (const [entity, entitySummary] of byEntity.entries()) {
-      entitySummary.intervals = entitySummary.intervals.sort(
-        (a, b) => Number(a.startTime) - Number(b.startTime)
-      );
-      const intervals = [];
-      for (let interval of entitySummary.intervals) {
-        if (
-          intervals.length == 0 ||
-          intervals.at(-1).endTime < interval.startTime
-        ) {
-          intervals.push(interval);
-        } else {
-          intervals.at(-1).endTime = Math.max(
-            intervals.at(-1).endTime,
-            interval.endTime
-          );
-        }
-      }
-      entitySummary.intervals = intervals;
+      entitySummary.intervals = getMergedIntervals(entitySummary.intervals);
       byEntity.set(entity, entitySummary);
     }
 
