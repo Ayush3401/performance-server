@@ -28,8 +28,41 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     let options = config.getOptions(formFactor);
     const page = await browser.newPage();
     await page.setCacheEnabled(false);
+    await page.setRequestInterception(true);
     // Remove navigation timeout error shown by pupperteer once the page doesn't load in 30 ms
     await page.setDefaultNavigationTimeout(0);
+    const requestInitiator = new Set();
+    page.on("request", (interceptedRequest) => {
+      const url = interceptedRequest.url();
+      const initiator = interceptedRequest.initiator();
+      let simplifiedInitiator;
+      if (initiator.type === 'parser') {
+        simplifiedInitiator = {
+          type: 'parser',
+          url: initiator.url
+        };
+      } else if (initiator.type === 'script') {
+        simplifiedInitiator = {
+          type: 'script',
+          urls: [...(new Set(initiator.stack.callFrames.map(frame => frame.url).filter(v => Boolean(v))))],
+        };
+      } else {
+        simplifiedInitiator = initiator;
+      }
+      if(simplifiedInitiator.url ){
+        requestInitiator.add({
+          url,
+          initiator: simplifiedInitiator.url
+        })
+      }
+      else if(simplifiedInitiator.urls && simplifiedInitiator.urls.length >0 ){
+        requestInitiator.add({
+          url,
+          initiator: simplifiedInitiator.urls[0]
+        })
+      }
+      interceptedRequest.continue();
+    });
     const flow = new UserFlow(page, {
       configContext: {
         settingsOverrides: options,
@@ -64,6 +97,7 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
       };
     }
     load.succeed(`Generated Report for ${url}`.green);
+    report.steps[0].lhr.audits["request-initiators"] = [...requestInitiator]
     return report.steps[0].lhr.audits;
   } catch (err) {
     load.fail(`${err}`.red);
