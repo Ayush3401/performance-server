@@ -9,6 +9,7 @@ const {
   initializeConfig,
 } = require("lighthouse/lighthouse-core/fraggle-rock/config/config.js");
 const { ThirdPartySummary } = require("./third-party");
+const { getInitiators } = require("./request-initiator");
 
 class UserFlow {
   /**
@@ -179,6 +180,7 @@ async function auditGatherSteps(gatherSteps, options) {
       runnerOptions
     );
     result.lhr.audits["third-party-summary"] = thirdPartyResult;
+    result.lhr.audits["request-initiators"] = await getInitiators(artifacts, runnerOptions);
     if (!result) throw new Error(`Step "${name}" did not return a result`);
     steps.push({ lhr: result.lhr, name });
   }
