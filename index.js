@@ -17,12 +17,12 @@ dotenv.config();
 app.use(cors());
 
 const SERVER_PORT = process.env.SERVER_PORT || 8080;
-let browser;
+let browser, headLessBrowser;
 
 app.get("/", async (req, res) => {
   // Get url, headers from request params
   let { url, formFactor, waitTime } = req.query;
-  const audits = await getAudits(url, formFactor, browser, Number(waitTime));
+  const audits = await getAudits(url, formFactor, browser, Number(waitTime), headLessBrowser);
   if (audits === {}) res.status(500).send(audits);
   else {
     writeNewRecord(url, formFactor, waitTime, audits);
@@ -52,6 +52,7 @@ app.listen(SERVER_PORT, async () => {
     headless: false,
     defaultViewport: null,
   });
+  headLessBrowser = await puppeteer.launch({});
   const page = await browser.newPage();
   await page.goto("https://analyser.netlify.app");
   createMetadata();

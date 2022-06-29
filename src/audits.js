@@ -15,7 +15,13 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  * @param {number} waitTime Time in ms to wait after page load
  * @returns Combined self made and lighthouse audits
  */
-const getAudits = async (url, formFactor, browser, waitTime) => {
+const getAudits = async (
+  url,
+  formFactor,
+  browser,
+  waitTime,
+  headLessBrowser
+) => {
   let paintTimings;
   const load = loading({
     text: `Analysing ${url}`.cyan,
@@ -27,40 +33,15 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
   try {
     let options = config.getOptions(formFactor);
     const page = await browser.newPage();
-    await page.setCacheEnabled(false);
-    await page.setRequestInterception(true);
+    const headLessPage = await headLessBrowser.newPage();
+    await headLessPage.setRequestInterception(true);
     // Remove navigation timeout error shown by pupperteer once the page doesn't load in 30 ms
     await page.setDefaultNavigationTimeout(0);
+    await headLessPage.setDefaultNavigationTimeout(0);
+    const requests = [];
     const requestInitiator = new Set();
-    page.on("request", (interceptedRequest) => {
-      const url = interceptedRequest.url();
-      const initiator = interceptedRequest.initiator();
-      let simplifiedInitiator;
-      if (initiator.type === 'parser') {
-        simplifiedInitiator = {
-          type: 'parser',
-          url: initiator.url
-        };
-      } else if (initiator.type === 'script') {
-        simplifiedInitiator = {
-          type: 'script',
-          urls: [...(new Set(initiator.stack.callFrames.map(frame => frame.url).filter(v => Boolean(v))))],
-        };
-      } else {
-        simplifiedInitiator = initiator;
-      }
-      if(simplifiedInitiator.url ){
-        requestInitiator.add({
-          url,
-          initiator: simplifiedInitiator.url
-        })
-      }
-      else if(simplifiedInitiator.urls && simplifiedInitiator.urls.length >0 ){
-        requestInitiator.add({
-          url,
-          initiator: simplifiedInitiator.urls[0]
-        })
-      }
+    headLessPage.on("request", (interceptedRequest) => {
+      requests.push(interceptedRequest);
       interceptedRequest.continue();
     });
     const flow = new UserFlow(page, {
@@ -69,10 +50,14 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
       },
     });
     // Navigate Flow
-    if (isNaN(waitTime) || waitTime === 0) await flow.navigate(url);
+    if (isNaN(waitTime) || waitTime === 0) {
+      headLessPage.goto(url).then(() => {})
+      await flow.navigate(url);
+    }
     // Tiespan flow
     else {
       await flow.startTimespan();
+      headLessPage.goto(url).then(() => {})
       await page.goto(url);
       // Waiting for waitTime
       await new Promise((r) =>
@@ -85,6 +70,7 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
       await flow.endTimespan();
     }
     await page.close();
+    await headLessPage.close();
     let report = await flow.createFlowResult();
     // If timespan flow
     if (!isNaN(waitTime) && waitTime > 0) {
@@ -96,8 +82,46 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
         numericValue: fcp.startTime,
       };
     }
+    requests.forEach((interceptedRequest) => {
+      const url = interceptedRequest.url();
+      const initiator = interceptedRequest.initiator();
+      let simplifiedInitiator;
+      if (initiator.type === "parser") {
+        simplifiedInitiator = {
+          type: "parser",
+          url: initiator.url,
+        };
+      } else if (initiator.type === "script") {
+        simplifiedInitiator = {
+          type: "script",
+          urls: [
+            ...new Set(
+              initiator.stack.callFrames
+                .map((frame) => frame.url)
+                .filter((v) => Boolean(v))
+            ),
+          ],
+        };
+      } else {
+        simplifiedInitiator = initiator;
+      }
+      if (simplifiedInitiator.url) {
+        requestInitiator.add({
+          url,
+          initiator: simplifiedInitiator.url,
+        });
+      } else if (
+        simplifiedInitiator.urls &&
+        simplifiedInitiator.urls.length > 0
+      ) {
+        requestInitiator.add({
+          url,
+          initiator: simplifiedInitiator.urls[0],
+        });
+      }
+    });
     load.succeed(`Generated Report for ${url}`.green);
-    report.steps[0].lhr.audits["request-initiators"] = [...requestInitiator]
+    report.steps[0].lhr.audits["request-initiators"] = [...requestInitiator];
     return report.steps[0].lhr.audits;
   } catch (err) {
     load.fail(`${err}`.red);
