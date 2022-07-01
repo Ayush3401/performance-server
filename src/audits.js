@@ -17,9 +17,6 @@ const MAX_WAIT_TIME = process.env.MAX_WAIT_TIME || 60000;
  * @returns Combined self made and lighthouse audits
  */
 const getAudits = async (url, formFactor, browser, waitTime) => {
-  // paintTimings represents timing information for FCP
-  let paintTimings;
-
   // Show a loading statement on console
   const load = loading({
     text: `Analysing ${url}`.cyan,
@@ -35,6 +32,13 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     const page = await browser.newPage();
     // Remove navigation timeout error shown by puppeteer once the page doesn't load in 30 ms
     await page.setDefaultNavigationTimeout(0);
+    let domcontentloadTime, loadTime, navigateTime;
+    page.on("domcontentloaded", () => {
+      domcontentloadTime = new Date();
+    });
+    page.on("load", () => {
+      loadTime = new Date();
+    });
     // Create a new lighthouse flow
     const flow = new UserFlow(page, {
       configContext: {
@@ -43,40 +47,43 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     });
     // Navigate Flow
     if (isNaN(waitTime) || waitTime === 0) {
+      navigateTime = new Date();
       await flow.navigate(url);
     }
     // Timespan flow
     else {
       // Start a timespan flow
       await flow.startTimespan();
+      navigateTime = new Date();
       await page.goto(url);
       // Waiting for waitTime
       await new Promise((r) =>
         setTimeout(r, Math.min(MAX_WAIT_TIME, waitTime))
       );
       // Generate fcp details for timespan view as lighthouse doesn't calculates it for timespan flow
-      paintTimings = await page.evaluate(function () {
-        return JSON.stringify(window.performance.getEntriesByType("paint"));
-      });
+
       // Stop the flow once the waiting time is over
       await flow.endTimespan();
     }
-    await page.close();
-    let report = await flow.createFlowResult();
-    // If timespan flow
-    if (!isNaN(waitTime) && waitTime > 0) {
-      const fcp = JSON.parse(paintTimings).find(
-        ({ name }) => name === "first-contentful-paint"
+    let performanceTimings = await page.evaluate(function () {
+      return JSON.stringify(
+        window.performance.getEntriesByType("navigation")[0]
       );
-      report.steps[0].lhr.audits["first-contentful-paint"] = {
-        id: "first-contentful-paint",
-        numericValue: fcp.startTime,
-      };
-    }
+    });
+    await page.close();
+    performanceTimings = JSON.parse(performanceTimings);
+    let report = await flow.createFlowResult();
+    report.steps[0].lhr.audits["dom-content-loaded"] = {
+      id: "dom-content-loaded",
+      numericValue: performanceTimings.domContentLoadedEventEnd,
+    };
+    report.steps[0].lhr.audits["load"] = {
+      id: "load",
+      numericValue: performanceTimings.loadEventEnd,
+    };
     load.succeed(`Generated Report for ${url}`.green);
     return report.steps[0].lhr.audits;
-  } 
-  catch (err) {
+  } catch (err) {
     load.fail(`${err}`.red);
     return {};
   }
