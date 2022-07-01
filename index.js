@@ -48,7 +48,5 @@ app.get("/audit/", async (req, res) => {
 
 app.listen(SERVER_PORT, async () => {
   browser = await puppeteer.launch({ headless: false, defaultViewport: null });
-  const page = await browser.newPage();
-  await page.goto("https://analyser.netlify.app");
   createMetadata();
 });

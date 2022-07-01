@@ -29,7 +29,7 @@ function updateMetadata(url, formFactor, waitTime, dateString) {
     data.push({
       url,
       formFactor,
-      waitTime,
+      waitTime: (waitTime/1000),
       dateString,
     });
     fs.writeFile(

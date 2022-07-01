@@ -40,6 +40,8 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
       loadTime = new Date();
     });
     // Create a new lighthouse flow
+    await page.setCacheEnabled(false);
+
     const flow = new UserFlow(page, {
       configContext: {
         settingsOverrides: options,
@@ -54,8 +56,9 @@ const getAudits = async (url, formFactor, browser, waitTime) => {
     else {
       // Start a timespan flow
       await flow.startTimespan();
-      navigateTime = new Date();
-      await page.goto(url);
+      await page.goto(url, {
+        waitUntil: "load",
+      });
       // Waiting for waitTime
       await new Promise((r) =>
         setTimeout(r, Math.min(MAX_WAIT_TIME, waitTime))
